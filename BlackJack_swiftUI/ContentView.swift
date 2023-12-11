@@ -71,6 +71,16 @@ struct ContentView: View {
                     } else {
                         print("failed to connect")
                     }
+                    
+                    // send message "table;cozmoName;position"
+                    message = "\(selectedTableNumber);dealer;5"
+                    // let data = message.data(using: .utf8)!
+                    let sentF = self.network.send(sText: message)
+                    if sentF.statS == "success" {
+                        print("sent successfully: \(message)")
+                    } else {
+                        print("failed to send")
+                    }
                 }) {
                     Text("Connect to Network")
                         .frame(width: UIScreen.main.bounds.width - 200, height:30)
@@ -115,7 +125,6 @@ struct ContentView: View {
                     message = "\(selectedTableNumber);START;\(selectedDeckNumber)"
                     // let data = message.data(using: .utf8)!
                     let sentF = self.network.send(sText: message)
-                    print("Message formulated:", message)
                     if sentF.statS == "success" {
                         print("sent successfully: \(message)")
                     } else {
@@ -159,7 +168,6 @@ struct ContentView: View {
                                 // "table;dealer;cardNumber;cardValue"
                                 cardValue = item.rawValue
                                 message = "\(selectedTableNumber);dealer;\(count);\(cardValue)"
-                                print("message: \(message)")
                                 // let data = message.data(using: .utf8)!
                                 let sentF = self.network.send(sText: message)
                                 if sentF.statS == "success" {
