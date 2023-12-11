@@ -43,7 +43,7 @@ struct ContentView: View {
     @State private var selectedTableNumber = 1
     @State private var selectedDeckNumber = 1
     @State private var handValue = 0
-    
+    @State private var count = 0
     
     let card_value_buttons: [[card_values]] = [
         [.two, .three, .four, .five, .six],
@@ -110,6 +110,7 @@ struct ContentView: View {
             
                 // Start Round
                 Button(action: {
+                    count = 0
                     // send value to network ( "table;START;"
                     message = "\(selectedTableNumber);START;\(selectedDeckNumber)"
                     // let data = message.data(using: .utf8)!
@@ -153,10 +154,11 @@ struct ContentView: View {
                             let labelIndex = rowIndex * 5 + columnIndex
 
                             Button(action: {
+                                count += 1
                                 cardValue = item.rawValue
                                 // "table;dealer;cardNumber;cardValue"
                                 cardValue = item.rawValue
-                                message = "\(selectedTableNumber);dealer;\(selectedSuit);\(cardValue)"
+                                message = "\(selectedTableNumber);dealer;\(count);\(cardValue)"
                                 print("message: \(message)")
                                 // let data = message.data(using: .utf8)!
                                 let sentF = self.network.send(sText: message)
