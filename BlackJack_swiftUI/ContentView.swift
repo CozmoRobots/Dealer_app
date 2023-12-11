@@ -9,22 +9,22 @@ import SwiftUI
 import Network
 
 enum card_values: String {
-    case two = "two"
-    case three = "three"
-    case four = "four"
-    case five = "five"
-    case six = "six"
-    case seven = "seven"
-    case eight = "eight"
-    case nine = "nine"
-    case ten = "ten"
+    case two = "Two"
+    case three = "Three"
+    case four = "Four"
+    case five = "Five"
+    case six = "Six"
+    case seven = "Seven"
+    case eight = "Eight"
+    case nine = "Nine"
+    case ten = "Ten"
     case jack = "Jack"
     case queen = "Queen"
     case king = "King"
     case ace = "Ace"
 }
 
-enum card_suits: String {
+enum CardSuits: String, CaseIterable {
     case spade = "Spade"
     case clover = "Club"
     case heart = "Heart"
@@ -37,124 +37,156 @@ struct ContentView: View {
     @State var IPadr: String = "10.0.1.10"
     @State var portNoS: String = "5000"
     @State var message: String = ""
-    @State private var selectedNumber = 1
+    @State private var cardSuit = ""
+    @State private var cardValue = ""
+    @State private var selectedSuit: CardSuits = .spade
+    @State private var selectedTableNumber = 1
+    @State private var selectedDeckNumber = 1
+    @State private var handValue = 0
     
     
-//    let card_value_buttons: [[card_values]] = [
-//        [.two, .three, .four],
-//        [.five, .six, .seven],
-//        [.eight, .nine, .ten],
-//        [.jack, .queen, .king],
-//        [.ace]
-//    ]
     let card_value_buttons: [[card_values]] = [
-        [.two, .three, .four, .five],
-        [.six, .seven, .eight, .nine],
-        [.ten, .jack, .queen, .king],
-        [.ace]
+        [.two, .three, .four, .five, .six],
+        [.seven, .eight, .nine, .ten, .jack],
+        [.queen, .king, .ace]
     ]
     
-    let card_suits_buttons: [card_suits] = [.spade, .clover, .heart, .diamond]
+    let cardLabelsArray: [String] = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King", "Ace"]
+
+    
+    let card_suits_buttons: [CardSuits] = [.spade, .clover, .heart, .diamond]
     let numbers = Array(1...5)
     
     var body: some View {
         
         NavigationView {
             
-            VStack {
-                VStack {
-                    Button(action: {
-                        let res = self.network.open(ip: self.IPadr, port: UInt16(self.portNoS)!)
-                        if res == "Ready" {
-                            print("connection success")
-                        } else {
-                            print("failed to connect")
-                        }
-                    }) {
-                        Text("Connect to Network")
-                    }
-                }.padding(.bottom, 10)
+            VStack(spacing: 20) {
                 
-                // Table number
-                VStack {
-                    Picker("Select a number", selection: $selectedNumber) {
-                        ForEach(numbers, id: \.self) { number in
-                            Text("\(number)")
-                                .tag(number)
-                        }
+                // Connect to network
+                Button(action: {
+                    let res = self.network.open(ip: self.IPadr, port: UInt16(self.portNoS)!)
+                    if res == "Ready" {
+                        print("connection success")
+                    } else {
+                        print("failed to connect")
                     }
-                    .pickerStyle(SegmentedPickerStyle())
-                    
-                    Button(action: {
-                        // send value to network
-                        let message = "START"
-                        // let data = message.data(using: .utf8)!
-                        let sentF = self.network.send(sText: message)
-                        if sentF.statS == "success" {
-                            print("sent successfully: \(message)")
-                        } else {
-                            print("failed to send")
-                        }
-                    }, label: {
-                        Text("Start Round")
-                    })
-               
+                }) {
+                    Text("Connect to Network")
+                        .frame(width: UIScreen.main.bounds.width - 200, height:30)
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
                 
-                    .padding()
-                    
-                    // Suits
-                    HStack {
-                        ForEach(card_suits_buttons, id: \.self) { suit in
+                
+                // Table Number
+                Text("Select a table number")
+                    .font(.headline)
+                    .padding(.top, 10)
+                Picker("Select a number", selection: $selectedTableNumber) {
+                    ForEach(numbers, id: \.self) { number in
+                        Text("\(number)")
+                            .tag(number)
+                    }
+                }
+                .frame(width: UIScreen.main.bounds.width - 40)
+                .pickerStyle(SegmentedPickerStyle())
+                
+                
+                // Deck Number
+                Text("Select a deck number")
+                    .font(.headline)
+                    .padding(.top, 10)
+                Picker("Select a table number", selection: $selectedDeckNumber) {
+                    ForEach(numbers, id: \.self) { number in
+                        Text("\(number)")
+                            .tag(number)
+                    }
+                }
+                .frame(width: UIScreen.main.bounds.width - 40)
+                .pickerStyle(SegmentedPickerStyle())
+            
+            
+                // Start Round
+                Button(action: {
+                    // send value to network ( "table;START;"
+                    message = "\(selectedTableNumber);START;\(selectedDeckNumber)"
+                    // let data = message.data(using: .utf8)!
+                    let sentF = self.network.send(sText: message)
+                    print("Message formulated:", message)
+                    if sentF.statS == "success" {
+                        print("sent successfully: \(message)")
+                    } else {
+                        print("failed to send")
+                    }
+                }, label: {
+                    Text("Start Round")
+                        .frame(width: UIScreen.main.bounds.width - 200, height:30)
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                })
+           
+                
+                // Suits
+                Text("Select a suit")
+                    .font(.headline)
+                    .padding(.top, 10)
+                
+                Picker("Suits", selection: $selectedSuit) {
+                    ForEach(card_suits_buttons, id: \.self) { suit in
+                        Text(self.label(for: suit))
+                            .tag(suit)
+                    }
+                }
+                .frame(width: UIScreen.main.bounds.width - 40)
+                .pickerStyle(SegmentedPickerStyle())
+                .padding(.bottom, 10)
+                
+                
+                // Values
+                ForEach(0..<card_value_buttons.count, id: \.self) { rowIndex in
+                    HStack(spacing: 10) {
+                        ForEach(0..<card_value_buttons[rowIndex].count, id: \.self) { columnIndex in
+                            let item = card_value_buttons[rowIndex][columnIndex]
+                            let labelIndex = rowIndex * 5 + columnIndex
+
                             Button(action: {
-                                // Perform an action when the button is tapped
-                                self.buttonTapped(suit)
-                            }) {
-                                // Display the button label based on the suit
-                                Text(self.label(for: suit))
+                                cardValue = item.rawValue
+                                // "table;dealer;cardNumber;cardValue"
+                                cardValue = item.rawValue
+                                message = "\(selectedTableNumber);dealer;\(selectedSuit);\(cardValue)"
+                                print("message: \(message)")
+                                // let data = message.data(using: .utf8)!
+                                let sentF = self.network.send(sText: message)
+                                if sentF.statS == "success" {
+                                    print("sent successfully: \(message)")
+                                } else {
+                                    print("failed to send")
+                                }
+                            }, label: {
+                                Text(cardLabelsArray[labelIndex])
                                     .font(.system(size: 20))
                                     .frame(
-                                        width: 25,
-                                        height: 25)
-                                    .padding()
+                                        width: self.buttonWidth(),
+                                        height: self.buttonHeight())
+                                    .background(Color.green)
                                     .foregroundColor(.white)
-                                    .background(Color.black)
-                                    .cornerRadius(8)
-                            }
+                                    .cornerRadius(10)
+                            })
                         }
-                    }.padding(.bottom, 10)
-                    
-                    // Values
-                    ForEach(card_value_buttons, id: \.self) { row in
-                        HStack(spacing: 20) {
-                            ForEach(row, id: \.self) { item in
-                                Button(action: {
-                                    // send value to network
-                                    let message = item.rawValue
-                                    // let data = message.data(using: .utf8)!
-                                    let sentF = self.network.send(sText: message)
-                                    if sentF.statS == "success" {
-                                        print("sent successfully: \(message)")
-                                    } else {
-                                        print("failed to send")
-                                    }
-                                }, label: {
-                                    Text(item.rawValue)
-                                        .font(.system(size: 20))
-                                        .frame(
-                                            width: self.buttonWidth(),
-                                            height: self.buttonHeight())
-                                        .background(Color.green)
-                                        .foregroundColor(.white)
-                                        .cornerRadius(10)
-                                })
-                            }
-                        }.padding(.bottom, 10)
                     }
                 }
                 
-                // Submit button
+                
+                // Stay button
                 Button(action: {
-                    let data = message.data(using: .utf8)!
+                    // "table;dealer;-1;-1"
+                    message = "\(selectedTableNumber);dealer;-1;-1"
+                    
+                    print("message: \(message)")
+//                    let data = message.data(using: .utf8)!
                     let sentF = self.network.send(sText: message)
                     if sentF.statS == "success" {
                         print("sent successfully: \(message)")
@@ -162,14 +194,14 @@ struct ContentView: View {
                         print("failed to send")
                     }
                 }, label: {
-                    Text("Send Message")
-                        .frame(width: UIScreen.main.bounds.width - 100, height:50)
+                    Text("Stay")
+                        .frame(width: UIScreen.main.bounds.width - 200, height:30)
                         .background(Color.green)
                         .foregroundColor(.white)
                         .cornerRadius(10)
                 })
                 
-                Spacer()
+                
                 // Button to navigate to TextInputView
                 NavigationLink(destination: TextInputView()) {
                     Text("Go to TextInputView")
@@ -187,22 +219,21 @@ struct ContentView: View {
             }
             
         }
-        .background(BlackjackColors.blackjackGreen)
-        .edgesIgnoringSafeArea(.all)
+        .navigationViewStyle(StackNavigationViewStyle())
 
     
     }
     
     func buttonWidth() -> CGFloat {
-        return (UIScreen.main.bounds.width - (5*20)) / 4
+        return (UIScreen.main.bounds.width - (5 * 20)) / 5
     }
     
     func buttonHeight() -> CGFloat {
-        return (UIScreen.main.bounds.width - (5*20)) / 4
+        return (UIScreen.main.bounds.width - (5 * 20)) / 5
     }
     
     
-    func label(for suit: card_suits) -> String {
+    func label(for suit: CardSuits) -> String {
         switch suit {
         case .spade:
             return "♤"
@@ -216,7 +247,7 @@ struct ContentView: View {
     }
     
     
-    func buttonTapped(_ suit: card_suits) {
+    func buttonTapped(_ suit: CardSuits) {
         // Handle button tap action here
         print("Button tapped for \(suit)")
     }
